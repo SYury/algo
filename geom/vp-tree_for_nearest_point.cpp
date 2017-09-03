@@ -1,4 +1,6 @@
- #include<bits/stdc++.h>
+//Nearest point query in O(log n)
+
+#include<bits/stdc++.h>
 
 using namespace std;
 typedef long long lint;

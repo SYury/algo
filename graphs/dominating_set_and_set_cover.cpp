@@ -1,3 +1,5 @@
+//Find minimal set cover (mcs) and minimal dominating set (mds) in something like O(2^0.61n)
+
 #include<bits/stdc++.h>
 
 using namespace std;
