@@ -1,5 +1,3 @@
-
-
 #include<bits/stdc++.h>
 
 using namespace std;
@@ -7,101 +5,94 @@ typedef long long lint;
 typedef long double ldb;
 typedef unsigned long long uli;
 
-#define X first
-#define Y second
-#define F(i, l, r) for(auto i = l; i != r; i++)
-#define Df(i, l, r) for(auto i = l; i != r; i--)
-#define I(i, a) for(auto i : a)
-#define pb push_back
-#define rs resize
-#define mk make_pair
-#define asg assign
-#define all(x) x.begin(),x.end()
-#define ret return
-#define cont continue
-#define brk break
-#define ins insert
-#define era erase
-#define fi0(x) memset(x, 0, sizeof(x))
-#define finf(x) memset(x, 127, sizeof(x))
-#define acpy(y, x) memcpy(y, x, sizeof(y))
-#define y1 adjf
-#define tm dhgdg
-
-const int MAXV = 2e2 + 6;
-
-int n, m;
-pair<int, int> r[MAXV];
-bool gr[MAXV][MAXV];
-bool grt[MAXV][MAXV];
-int ord[MAXV];
-bool used[MAXV];
-int id[MAXV];
-int cid = 0;
-int sz = 0;
-
-void add_edge(int v, int u){
-	gr[v][u] = grt[u][v] = true;
-}
-
-void dfs(int v){
-	used[v] = true;
-	F(u, 0, 2*m){
-		if(gr[v][u] && !used[u])dfs(u);
+template<int T>
+struct sat2{
+	bool gr[T][T];
+	bool grt[T][T];
+	int comp[T];
+	int order[T];
+	int n;
+	int ord_ptr;
+	sat2(){}
+	void init(int _n){
+		n = _n; ord_ptr = 0;
+		for(int i = 0; i < n; i++){
+			comp[i] = 0;
+			for(int j = i; j < n; j++){
+				gr[i][j] = gr[j][i] = false;
+				grt[i][j] = grt[j][i] = false;
+			}
+		}
 	}
-	ord[sz++] = v;
-}
-
-void dfs1(int v){
-	used[v] = true;
-	id[v] = cid;
-	F(u, 0, 2 * m){
-		if(grt[v][u] && !used[u])dfs1(u);
+	void add_edge(int v, int u){
+		gr[v][u] = true;
+		grt[u][v] = true;
 	}
-}
+	void dfs(int v){
+		comp[v] = -1;
+		for(int i = 0; i < n; i++)if(comp[i] == 0 && gr[v][i])dfs(i);
+		order[ord_ptr++] = v;
+	}
+	void dfs1(int v, int curr){
+		comp[v] = curr;
+		for(int i = 0; i < n; i++)if(comp[i] == -1 && grt[v][i])dfs1(i, curr);
+	}
+	void solve(){
+		for(int i = 0; i < n; i++)if(comp[i] == 0)dfs(i);
+		reverse(order, order + n);
+		int ptr = 0;
+		for(int i = 0; i < n; i++)if(comp[order[i]] == -1)dfs1(order[i], ptr++);
+	}
+};
+
+sat2<222> solver;
+int n;
+int a[111][111];
+int b[111][111];
+bool good[111];
 
 int main(){
-	ios_base::sync_with_stdio(0);
-	cin.tie(0);
-	fi0(gr); fi0(grt);
-	scanf("%d%d", &n, &m);
-	F(i, 0, m){
-		int v, u;
-		scanf("%d%d", &v, &u);
-		v--; u--;
-		if(v > u)swap(v, u);
-		r[i] = mk(v, u);
-	}
-	F(i, 0, m){
-		F(j, i + 1, m){
-			pair<int, int> a[4];
-			a[0] = mk(r[i].X, 0); a[1] = mk(r[i].Y, 0); a[2] = mk(r[j].X, 1); a[3] = mk(r[j].Y, 1);
-			sort(a, a + 4);
-			bool ie = false;
-			F(k, 1, 4)if(a[k].X == a[k - 1].X){ie = true; brk;}
-			if(ie)cont;
-			F(k, 1, 4)if(a[k].Y == a[k - 1].Y){ie = true; brk;}
-			if(ie)cont;
-			add_edge(2*i + 1, 2*j);
-			add_edge(2*i, 2*j + 1);
-			add_edge(2*j, 2*i + 1);
-			add_edge(2*j + 1, 2*i);
+	scanf("%d", &n);
+	solver.init(2*n);
+	for(int i = 0; i < n; i++)
+		for(int j = 0; j < n; j++){
+			scanf("%d", &a[i][j]);
+			if(i <= j || a[i][j] == -1)continue;
+			if(a[j][i] == -1)continue;
+			int ti = 2 * i, tj = 2 * j;
+			if(a[i][j] == 0 && a[j][i] == 0){
+				solver.add_edge(ti, tj^1);
+				solver.add_edge(tj, ti^1);
+			}
+			if(a[i][j] == 1 && a[j][i] == 0){
+				solver.add_edge(ti^1, tj^1);
+				solver.add_edge(tj, ti);
+			}
+			if(a[i][j] == 0 && a[j][i] == 1){
+				solver.add_edge(ti, tj);
+				solver.add_edge(tj^1, ti^1);
+			}
+			if(a[i][j] == 1 && a[j][i] == 1){
+				solver.add_edge(ti^1, tj);
+				solver.add_edge(tj^1, ti);
+			}
+		}
+	solver.solve();
+	for(int i = 0; i < n; i++){
+		if(solver.comp[2*i] == solver.comp[2*i + 1]){printf("Impossible"); return 0;}
+		good[i] = solver.comp[2*i] > solver.comp[2*i + 1];
+		for(int j = 0; j < i; j++){
+			if(a[i][j] == -1 && a[j][i] == -1){b[i][j] = b[j][i] = 1; continue;}
+			if(a[i][j] == 0 && good[i]){b[i][j] = 0; b[j][i] = 3; continue;}
+			if(a[i][j] == 1 && !good[i]){b[i][j] = 0; b[j][i] = 3; continue;}
+			if(a[j][i] == 0 && good[j]){b[j][i] = 0; b[i][j] = 3; continue;}
+			if(a[j][i] == 1 && !good[j]){b[j][i] = 0; b[i][j] = 3; continue;}
+			b[i][j] = b[j][i] = 1;
 		}
 	}
-	fi0(used);
-	F(i, 0, 2*m)if(!used[i])dfs(i);
-	reverse(ord, ord + sz);
-	fi0(used);
-	F(i, 0, sz){
-		int v = ord[i];
-		if(!used[v]){
-			dfs1(v);
-			cid++;
-		}
+	for(int i = 0; i < n; i++){
+		for(int j = 0; j < n; j++)printf("%d ", b[i][j]);
+		printf("\n");
 	}
-	F(i, 0, m){
-		if(id[2*i] == id[2*i + 1]){printf("Impossible"); ret 0;}
-	}
-	F(i, 0, m)if(id[2*i] < id[2*i + 1])putc('o', stdout); else putc('i', stdout);
-	ret 0;
-} 
+	return 0;
+}
