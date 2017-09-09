@@ -8,27 +8,6 @@ typedef long long lint;
 typedef long double ldb;
 typedef unsigned long long uli;
 
-#define X first
-#define Y second
-#define F(i, l, r) for(auto i = l; i != r; i++)
-#define Df(i, l, r) for(auto i = l; i != r; i--)
-#define I(i, a) for(auto i : a)
-#define pb push_back
-#define rs resize
-#define mk make_pair
-#define asg assign
-#define all(x) x.begin(),x.end()
-#define ret return
-#define cont continue
-#define brk break
-#define ins insert
-#define era erase
-#define fi0(x) memset(x, 0, sizeof(x))
-#define finf(x) memset(x, 127, sizeof(x))
-#define acpy(y, x) memcpy(y, x, sizeof(y))
-#define y1 adjf
-#define tm dhgdg
-
 const lint inf = 1e18;
 
 struct edge{
@@ -51,26 +30,26 @@ struct MCMF{
 	set<pair<lint, int> > s;
 	void set_n(int sn){
 		n = sn;
-		gr.rs(n);
-		pot.rs(n);
-		p.rs(n);
-		dist.rs(n);
-		fb_inq.rs(n);
+		gr.resize(n);
+		pot.resize(n);
+		p.resize(n);
+		dist.resize(n);
+		fb_inq.resize(n);
 	}
 	void add_edge(edge e){
-		gr[e.v].pb(e);
+		gr[e.v].push_back(e);
 	}
 	void ford_bellman(){
-		pot.asg(n, inf);
+		pot.assign(n, inf);
 		pot[0] = 0;
-		fb_inq.asg(n, false);
+		fb_inq.assign(n, false);
 		fb_inq[0] = true; fb_q.push(0);
 		while(!fb_q.empty()){
 			int v = fb_q.front();
 			fb_q.pop();
 			fb_inq[v] = false;
-			I(e, gr[v]){
-				if(e.cap - e.flow == 0)cont;
+			for(auto e : gr[v]){
+				if(e.cap - e.flow == 0)continue;
 				if(pot[e.u] > pot[v] + e.cost){
 					pot[e.u] = pot[v] + e.cost;
 					if(!fb_inq[e.u]){fb_inq[e.u] = true; fb_q.push(e.u);}
@@ -79,44 +58,44 @@ struct MCMF{
 		}
 	}
 	void dijkstra(){
-		dist.asg(n, inf);
-		p.asg(n, -1);
+		dist.assign(n, inf);
+		p.assign(n, -1);
 		dist[0] = 0;
-		s.ins(mk(0, 0));
+		s.insert(make_pair(0, 0));
 		while(!s.empty()){
-			int v = s.begin()->Y;
-			s.era(s.begin());
-			I(e, gr[v]){
-				if(e.cap - e.flow == 0)cont;
+			int v = s.begin()->second;
+			s.erase(s.begin());
+			for(auto e : gr[v]){
+				if(e.cap - e.flow == 0)continue;
 				lint w = pot[e.u] - pot[v] + e.cost;
-				if(dist[e.u] <= dist[v] + w)cont;
+				if(dist[e.u] <= dist[v] + w)continue;
 				p[e.u] = v;
-				s.era(mk(dist[e.u], e.u));
+				s.erase(make_pair(dist[e.u], e.u));
 				dist[e.u] = dist[v] + w;
-				s.ins(mk(dist[e.u], e.u));
+				s.insert(make_pair(dist[e.u], e.u));
 			}
 		}
-		F(i, 1, n)if(p[i] != -1)dist[i] = dist[i] - pot[i] + pot[0];
+		for(int i = 1; i < n; i++)if(p[i] != -1)dist[i] = dist[i] - pot[i] + pot[0];
 		pot.swap(dist);
 	}
 	lint min_cost(int val){
 		ford_bellman();
-		F(i, 0, val){
+		for(int i = 0; i < val; i++){
 			dijkstra();
-			if(pot[n - 1] == inf)ret -1;
+			if(pot[n - 1] == inf)return -1;
 			int v = n - 1;
 			while(true){
 				int pv = p[v];
-				if(pv == -1)brk;
+				if(pv == -1)break;
 				for(auto & e : gr[pv])if(e.u == v)e.flow++;
 				for(auto & e : gr[v])if(e.u == pv)e.flow--;
 				v = pv;
 			}
 		}
 		lint ans = 0;
-		F(i, 0, n)
-			I(e, gr[i])if(e.cap != 0)ans += e.flow * 1ll * e.cost;
-		ret ans;
+		for(int i = 0; i < n; i++)
+			for(auto e : gr[i])if(e.cap != 0)ans += e.flow * 1ll * e.cost;
+		return ans;
 	}
 };
 
@@ -133,24 +112,24 @@ int main(){
 	cin.tie(0);
 	scanf("%d%d", &k, &n);
 	solver.set_n(2 + n + k);
-	F(i, 0, k)scanf("%d%d", &s[i], &c[i]);
-	F(i, 0, n){
+	for(int i = 0; i < k; i++)scanf("%d%d", &s[i], &c[i]);
+	for(int i = 0; i < n; i++){
 		solver.add_edge(edge(0, i + 1, 0, 1));
 		solver.add_edge(edge(i + 1, 0, 0, 0));
 		int t;
 		scanf("%d", &t);
-		F(j, 0, t){
+		for(int j = 0; j < t; j++){
 			int x;
 			scanf("%d", &x);
 			solver.add_edge(edge(i + 1, n + x, c[x - 1], 1));
 			solver.add_edge(edge(n + x, i + 1, -c[x - 1], 0));
 		}
 	}
-	F(i, 0, k){
+	for(int i = 0; i < k; i++){
 		solver.add_edge(edge(n + 1 + i, n + 1 + k, 0, s[i]));
 		solver.add_edge(edge(n + 1 + k, n + 1 + i, 0, 0));
 	}
 	printf("%lld", solver.min_cost(n));
-	ret 0;
+	return 0;
 }
 
