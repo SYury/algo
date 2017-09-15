@@ -28,7 +28,6 @@ void calc(int v, int p, int root, int cu){
 void build(int v, int p = -1){
 	calc(v, -1, p, 1);
 	int half = sz[v]>>1;
-	if(sz[v]&1)half++;
 	int prv = -1;
 	while(true){
 		int msz = 0, mx = -1;
