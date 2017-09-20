@@ -15,7 +15,7 @@ struct pt{
 };
 
 int operator * (const pt & a, const pt & b){
-	return a.x * b.y - b.x * a.y;
+	return a.x * 1ll * b.y - b.x * 1ll * a.y;
 }
 
 pt operator - (const pt & a, const pt & b){
