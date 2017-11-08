@@ -31,7 +31,7 @@ struct comp{
 	comp(){}
 	comp(pt _base):base(_base){}
 	bool operator () (const pt & l, const pt & r){
-		return (l - base) * (r - base) > 0 || ((l - base) * (r - base) == 0 && dist(l, base) > dist(r, base));
+		return (l - base) * (r - base) > 0 || ((l - base) * (r - base) == 0 && dist(l, base) < dist(r, base));
 	}
 };
 
