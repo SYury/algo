@@ -44,6 +44,9 @@ poly convex_hull(poly p){
 	for(int i = 1; i < n; i++)if(p[i].y < p[pos].y || (p[i].y == p[pos].y && p[i].x < p[pos].x))pos = i;
 	swap(p[pos], p[0]);
 	sort(p.begin() + 1, p.end(), comp(p[0]));
+	int ptr = n - 2;
+	while(ptr > 0 && (p[ptr] - p[0]) * (p[n - 1] - p[0]) == 0)ptr--;
+	reverse(p.begin() + ptr + 1, p.end());
 	vector<int> stk(n);
 	stk[0] = 0;
 	int ptr = 1;
