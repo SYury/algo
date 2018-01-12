@@ -197,6 +197,45 @@ vector<pt> tangentsPtCircle(pt p, Circle c){
 	return {l, r};
 }
 
+vector<Line> outerTangents(Circle c1, Circle c2){
+	if(c1 == c2){return {Line(0, 0, 0)};}
+	if(c1.r > c2.r)swap(c1, c2);
+	dbl d = (c1.c - c2.c).length();
+	if(c1.r + d < c2.r - eps)return {};
+	if(fabs(c1.r - c2.r) < eps){
+		dbl ang = (c2.c - c1.c).angle();
+		pt l = c1.getByAngle(ang + PI/2), r = c1.getByAngle(ang - PI/2);	
+		return {{l, l + (c2.c - c1.c)}, {r, r + (c2.c - c1.c)}};
+	}
+	pt p = c2.c + (c2.c - c1.c) * (c2.r/(c2.r - c1.r));
+	if(c1.r + d < c2.r + eps){
+		return {{p, p + (c2.c - c1.c).rotate(PI/2)}};
+	}
+	dbl ang = atan((c2.r - c1.r)/d);
+	return {{p, p + (c1.c - p).rotate(ang)}, {p, p + (c1.c - p).rotate(-ang)}};
+}
+
+vector<Line> innerTangents(Circle c1, Circle c2){
+	if(c1 == c2){return {};}
+	if(c1.r > c2.r)swap(c1, c2);
+	dbl d = (c1.c - c2.c).length();
+	if(d < c1.r + c2.r - eps)return {};
+	pt p = c1.c + (c2.c - c1.c) * (c1.r/(c1.r + c2.r));
+	if(d < c1.r + c2.r + eps){
+		return {{p, p + (c1.c - p).rotate(PI/2)}};
+	}
+	dbl ang = acos(c1.r/(p - c1.c).length());
+	dbl cang = (p - c1.c).angle();
+	pt l = c1.getByAngle(cang + ang), r = c1.getByAngle(cang - ang);
+	return {{p, l}, {p, r}};
+}
+
+vector<Line> allTangents(Circle c1, Circle c2){
+	auto kek = outerTangents(c1, c2), bishkek = innerTangents(c1, c2);
+	for(auto lol : kek)bishkek.push_back(lol);
+	return bishkek;
+}
+
 dbl angle(pt l, pt mid, pt r){
 	l -= mid; r -= mid;
 	return atan2(l.cross(r), l.dot(r));
@@ -237,19 +276,3 @@ struct Polygon{
 	}
 };
 
-int main(){
-	ios_base::sync_with_stdio(false);
-	cin.tie(0);
-	int n;
-	cin >> n;
-	pt bishkek;
-	cin >> bishkek.x >> bishkek.y;
-	Polygon kek;
-	for(int i = 0; i < n; i++){
-		double x, y;
-		cin >> x >> y;
-		kek.p.push_back(pt(x, y));
-	}
-	if(kek.insidePt(bishkek))cout << "YES"; else cout << "NO";
-	return 0;
-}
