@@ -52,12 +52,33 @@ struct pt{
 		dbl nx = x * pcos - y * psin, ny = y * pcos + x * psin;
 		x = nx; y = ny;
 	}
+	void rotateSelf(dbl cosphi, dbl sinphi){
+		dbl nx = x * cosphi - y * sinphi, ny = y * cosphi + x * sinphi;
+		x = nx; y = ny;
+	}
 	pt rotate(dbl phi)const{
 		pt res(*this);
 		res.rotateSelf(phi);
 		return res;
 	}
+	pt rotate(dbl cosphi, dbl sinphi)const{
+		pt res(*this);
+		res.rotateSelf(cosphi, sinphi);
+		return res;
+	}
 };
+
+bool lexComp(const pt & l, const pt & r){
+	if(fabs(l.x - r.x) > eps){
+		return l.x < r.x;
+	}
+	else return l.y < r.y;
+}
+
+dbl angle(pt l, pt mid, pt r){
+	l -= mid; r -= mid;
+	return atan2(l.cross(r), l.dot(r));
+}
 
 struct Line{
 	pt p[2];
@@ -82,7 +103,7 @@ struct Line{
 		else p[0] = pt{0, -c/b};
 		p[1] = pt(p[0].x - b, p[0].y + a);
 	}
-	pt& operator [](int x){return p[x];}
+	pt& operator [](const int & i){return p[i];}
 	Line(const Line & l){
 		p[0] = l.p[0]; p[1] = l.p[1];
 		a = l.a; b = l.b; c = l.c;	
@@ -146,7 +167,10 @@ pt projPtLine(pt p, Line l){
 }
 
 vector<pt> interLineLine(Line l1, Line l2){
-	if(fabs(l1.getOrth().cross(l2.getOrth())) < eps)return {};
+	if(fabs(l1.getOrth().cross(l2.getOrth())) < eps){
+		if(l1.hasPointLine(l2[0]))return {l1[0], l1[1]};
+		else return {};
+	}
 	pt vec = l1.p[1] - l1.p[0];
 	pt norm = l2.getOrth();
 	dbl s = (-l2.c - norm.dot(l1.p[0]))/norm.dot(vec);
@@ -154,10 +178,35 @@ vector<pt> interLineLine(Line l1, Line l2){
 }
 
 vector<pt> interSegSeg(Line l1, Line l2){
-	auto cand = interLineLine(l1, l2);
-	vector<pt> res;
-	for(auto x : cand){if(l1.hasPointSeg(x) && l2.hasPointSeg(x))res.push_back(x);}
-	return res;
+	if(l1[0] == l1[1]){
+		if(l2[0] == l2[1]){
+			if(l1[0] == l2[0])return {l1[0]};
+			else return {};
+		}
+		else{
+			if(l2.hasPointSeg(l1[0]))return {l1[0]};
+			else return {};
+		}
+	}
+	if(l2[0] == l2[1]){
+		if(l1.hasPointSeg(l2[0]))return {l2[0]};
+		else return {};
+	}
+	auto li = interLineLine(l1, l2);
+	if(li.empty())return li;
+	if(li.size() == 2){
+		if(!lexComp(l1[0], l1[1]))swap(l1[0], l1[1]);
+		if(!lexComp(l2[0], l2[1]))swap(l2[0], l2[1]);
+		vector<pt> res(2);
+		if(lexComp(l1[0], l2[0]))res[0] = l2[0]; else res[0] = l1[0];
+		if(lexComp(l1[1], l2[1]))res[1] = l1[1]; else res[1] = l2[1];
+		if(res[0] == res[1])res.pop_back();
+		if((int)res.size() == 2 && lexComp(res[1], res[0]))return {};
+		else return res;
+	}
+	pt cand = li[0];
+	if(l1.hasPointSeg(cand) && l2.hasPointSeg(cand))return {cand};
+	else return {};
 }
 
 vector<pt> interLineCircle(Line l, Circle c){
@@ -236,16 +285,13 @@ vector<Line> allTangents(Circle c1, Circle c2){
 	return bishkek;
 }
 
-dbl angle(pt l, pt mid, pt r){
-	l -= mid; r -= mid;
-	return atan2(l.cross(r), l.dot(r));
-}
-
 struct Polygon{
 	vector<pt> p;
 	Polygon():p(vector<pt>()){}
 	Polygon(vector<pt> pts):p(pts){}
 	int nxt(int i){return (i + 1 == (int)p.size()) ? 0 : (i + 1);}
+	int prv(int i){return (i == 0) ? ((int)p.size()-1) : (i-1);}
+	pt& operator[](const int & i){return p[i];}
 	dbl area(){
 		dbl res = 0;
 		for(int i = 0; i < (int)p.size(); i++)res += p[i].cross(p[nxt(i)]);
@@ -275,4 +321,3 @@ struct Polygon{
 		return wn != 0;
 	}
 };
-
