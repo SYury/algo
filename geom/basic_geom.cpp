@@ -66,6 +66,12 @@ struct pt{
 		res.rotateSelf(cosphi, sinphi);
 		return res;
 	}
+	void out()const{
+		cout << fixed << x << " " << y << '\n';
+	}
+	void outf()const{
+		printf("%.15lf %.15lf\n", (double)x, (double)y);
+	}
 };
 
 bool lexComp(const pt & l, const pt & r){
@@ -256,17 +262,17 @@ vector<Line> outerTangents(Circle c1, Circle c2){
 		pt l = c1.getByAngle(ang + PI/2), r = c1.getByAngle(ang - PI/2);	
 		return {{l, l + (c2.c - c1.c)}, {r, r + (c2.c - c1.c)}};
 	}
-	pt p = c2.c + (c2.c - c1.c) * (c2.r/(c2.r - c1.r));
+	pt p = c2.c + (c1.c - c2.c) * (c2.r/(c2.r - c1.r));
 	if(c1.r + d < c2.r + eps){
-		return {{p, p + (c2.c - c1.c).rotate(PI/2)}};
+		return {{p, p + (c1.c - c2.c).rotate(PI/2)}};
 	}
-	dbl ang = atan((c2.r - c1.r)/d);
+	dbl ang = asin((c2.r - c1.r)/d);
 	return {{p, p + (c1.c - p).rotate(ang)}, {p, p + (c1.c - p).rotate(-ang)}};
 }
 
 vector<Line> innerTangents(Circle c1, Circle c2){
 	if(c1 == c2){return {};}
-	if(c1.r > c2.r)swap(c1, c2);
+	if(c1.r < c2.r)swap(c1, c2);
 	dbl d = (c1.c - c2.c).length();
 	if(d < c1.r + c2.r - eps)return {};
 	pt p = c1.c + (c2.c - c1.c) * (c1.r/(c1.r + c2.r));
