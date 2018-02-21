@@ -171,10 +171,10 @@ vector<pt> interLineLine(Line l1, Line l2){
 		if(l1.hasPointLine(l2[0]))return {l1[0], l1[1]};
 		else return {};
 	}
-	pt vec = l1.p[1] - l1.p[0];
-	pt norm = l2.getOrth();
-	dbl s = (-l2.c - norm.dot(l1.p[0]))/norm.dot(vec);
-	return {pt(l1.p[0] + vec * s)};
+	pt u = l2[1] - l2[0];
+	pt v = l1[1] - l1[0];
+	dbl s = u.cross(l2[0] - l1[0])/u.cross(v);
+	return {pt(l1[0] + v * s)};
 }
 
 vector<pt> interSegSeg(Line l1, Line l2){
