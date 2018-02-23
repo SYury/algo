@@ -227,6 +227,13 @@ vector<pt> interLineCircle(Line l, Circle c){
 	return {p + (l[1] - l[0])*lol, p - (l[1] - l[0])*lol};
 }
 
+vector<pt> interSegCircle(Line l, Circle c){
+	auto cand = interLineCircle(l, c);
+	vector<pt> res;
+	for(pt p : cand)if(l.hasPointSeg(p))res.push_back(p);
+	return res;
+}
+
 vector<pt> interCircleCircle(Circle c1, Circle c2){
 	if(c1.r + eps < c2.r)swap(c1, c2);
 	if(c1 == c2){
@@ -247,9 +254,9 @@ vector<pt> tangentsPtCircle(pt p, Circle c){
 	dbl d = (c.c - p).length();
 	if(d < c.r - eps)return {};
 	if(fabs(d - c.r) < eps)return {p};
-	dbl ang = acos(d/c.r);
-	pt l = c.c + (p - c.c).rotate(ang) * (c.r/d), r = c.c + (p - c.c).rotate(-ang) * (c.r/d);
-	return {l, r};
+	dbl ang = acos(c.r/d);
+	dbl cang = (p - c.c).angle();
+	return {c.getByAngle(cang - ang), c.getByAngle(cang + ang)};
 }
 
 vector<Line> outerTangents(Circle c1, Circle c2){
@@ -295,8 +302,9 @@ struct Polygon{
 	vector<pt> p;
 	Polygon():p(vector<pt>()){}
 	Polygon(vector<pt> pts):p(pts){}
-	int nxt(int i){return (i + 1 == (int)p.size()) ? 0 : (i + 1);}
-	int prv(int i){return (i == 0) ? ((int)p.size()-1) : (i-1);}
+	int nxt(int i)const{return (i + 1 == (int)p.size()) ? 0 : (i + 1);}
+	int prv(int i)const{return (i == 0) ? ((int)p.size()-1) : (i-1);}
+	int size()const{return (int)p.size();}
 	pt& operator[](const int & i){return p[i];}
 	dbl area(){
 		dbl res = 0;
