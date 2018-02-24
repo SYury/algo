@@ -1,6 +1,7 @@
 //ADD BASIC GEOM HERE
 
-//Circle center should be inside the polygon
+//I'm not sure it work properly if the circle's center is not inside the polygon
+//It doesn't add tangency points if they aren't needed to build the intersection
 
 struct edge{
 	pt l, r;
@@ -15,6 +16,8 @@ vector<edge> calc_inter(Polygon p, Circle c){
 	bool was_last = false;
 	bool was_wp = false;
 	pt where;
+	pt tp;
+	bool touched = false;
 	for(int i = 0; i < p.size(); i++){
 		int j = p.nxt(i);
 		Line li(p[i], p[j]);
@@ -28,7 +31,7 @@ vector<edge> calc_inter(Polygon p, Circle c){
 			was_last = true; la = r;
 		}
 		if(kek.size() == 1){
-			if(li.distToPt(c.c) > c.r - eps)continue;
+			if(li.distToPt(c.c) > c.r - eps){touched = true; tp = kek[0]; continue;}
 			if(c.c.dist(p[i]) < c.r + eps){
 				was_last = true;
 				la = kek[0];
@@ -46,5 +49,6 @@ vector<edge> calc_inter(Polygon p, Circle c){
 	}
 	if(was_wp)edges.push_back({la, where, true});
 	assert(edges.size() != 1);
+	if(edges.empty() && touched){edges.push_back({tp, tp, false});}
 	return edges;
 }
