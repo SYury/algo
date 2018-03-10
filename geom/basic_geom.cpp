@@ -27,6 +27,7 @@ struct pt{
 	pt& operator /= (dbl a){assert(fabs(a) > eps); return *this;}
 	bool isZero()const{return fabs(x) < eps && fabs(y) < eps;}
 	bool operator == (const pt & a)const{return (*this - a).isZero();}
+	bool operator != (const pt & a)const{return !(*this == a);}
 	dbl cross(const pt & a)const{return x * a.y - y * a.x;}
 	dbl cross(pt a, pt b)const{
 		a -= *this; b -= *this;
@@ -84,6 +85,33 @@ bool lexComp(const pt & l, const pt & r){
 dbl angle(pt l, pt mid, pt r){
 	l -= mid; r -= mid;
 	return atan2(l.cross(r), l.dot(r));
+}
+
+inline pt trBary(pt a, pt b, pt c, dbl wa, dbl wb, dbl wc){
+	return (a * wa + b * wb + c * wc)/(wa + wb + wc);
+}
+
+inline pt trCent(pt a, pt b, pt c){
+	return trBary(a, b, c, 1, 1, 1);
+}
+
+inline pt trIncent(pt a, pt b, pt c){
+	return trBary(a, b, c, (b - c).length(), (c - a).length(), (a - b).length());
+}
+
+inline pt trCirc(pt a, pt b, pt c){
+	dbl la = (b - c).sqrLength(), lb = (c - a).sqrLength(), lc = (a - b).sqrLength();
+	return trBary(a, b, c, la * (lb + lc - la), lb * (lc + la - lb), lc * (la + lb - lc));
+}
+
+inline pt trOrth(pt a, pt b, pt c){
+	dbl la = (b - c).sqrLength(), lb = (c - a).sqrLength(), lc = (a - b).sqrLength();
+	return trBary(a, b, c, (la + lb - lc) * (la + lc - lb), (lb + la - lc) * (lb + lc - la), (lc + la - lb) * (lc + lb - la));
+}
+
+inline pt trExc(pt a, pt b, pt c){
+	dbl la = (b - c).length(), lb = (c - a).length(), lc = (a - b).length();
+	return trBary(a, b, c, -la, lb, lc);
 }
 
 struct Line{
@@ -215,6 +243,16 @@ vector<pt> interSegSeg(Line l1, Line l2){
 	else return {};
 }
 
+vector<pt> interLineSeg(Line l1, Line l2){
+	if(abs((l1[0] - l1[1]).cross(l2[0] - l2[1])) < eps){
+		if(l1.hasPointLine(l2[0])){if(lexComp(l2[1], l2[0])) return {l2[1], l2[0]}; else return {l2[0], l2[1]};}
+		else return {};
+	}
+	pt cand = interLineLine(l1, l2)[0];
+	if(l2.hasPointSeg(cand))return {cand};
+	else return {};
+}
+
 vector<pt> interLineCircle(Line l, Circle c){
 	dbl d = l.distToPt(c.c);
 	if(d > c.r + eps)return {};
@@ -335,3 +373,87 @@ struct Polygon{
 		return wn != 0;
 	}
 };
+
+void cutConvex(Line l, Polygon p, Polygon & ansl, Polygon & ansr){
+	bool add_to_l = true;
+	auto add_point = [&](Polygon & where, pt & what){if(where.p.empty() || where.p.back() != what)where.p.push_back(what);};
+	bool wl = false, wr = false;
+	for(pt cu : p.p){
+		int tmp = l.signPoint(cu);
+		if(tmp == -1)wl = true;
+		if(tmp == 1)wr = true;
+	}
+	ansl.p.clear(); ansr.p.clear();
+	if(!wl || !wr){ansl = Polygon(vector<pt>()); ansr = p; return;}
+	for(int i = 0; i < p.size(); i++){
+		int j = p.nxt(i);
+		Line curr(p[i], p[j]);
+		auto kek = interLineSeg(l, curr);
+		if(kek.size() == 2){ansl = Polygon(vector<pt>()); ansr = p; return;}
+		if(kek.size() == 0){
+			if(add_to_l){
+				add_point(ansl, p[i]);
+				add_point(ansl, p[j]);
+			}
+			else{
+				add_point(ansr, p[i]);
+				add_point(ansr, p[j]);
+			}
+		}
+		if(kek.size() == 1){
+			if(kek[0] == p[i]){
+				if(add_to_l){
+					add_point(ansl, p[i]);
+					add_point(ansl, p[j]);
+				}
+				else{
+					add_point(ansr, p[i]);
+					add_point(ansr, p[j]);
+				}
+				continue;
+			}
+			pt inter = kek[0];
+			if(add_to_l){
+				add_point(ansl, p[i]);
+				add_point(ansl, inter);
+				add_point(ansr, inter);
+				add_point(ansr, p[j]);
+				add_to_l = false;
+			}
+			else{
+				add_point(ansr, p[i]);
+				add_point(ansr, inter);
+				add_point(ansl, inter);
+				add_point(ansl, p[j]);
+				add_to_l = true;
+			}
+		}
+	}
+	if(ansr.size() > 1 && ansr.p.front() == ansr.p.back())ansr.p.pop_back();
+	if(ansl.size() > 1 && ansl.p.front() == ansl.p.back())ansl.p.pop_back();
+}
+
+Circle minCircle(vector<pt> what){
+	srand(time(0));
+	int n = what.size();
+	for(int i = 0; i < n; i++){
+		int j = rand()%(i + 1);
+		swap(what[i], what[j]);
+	}
+	if(what.empty())return Circle({0, 0}, 0);
+	Circle ans(what[0], 0);
+	for(int i = 1; i < n; i++){
+		if(ans.c.dist(what[i]) < ans.r + eps)continue;
+		ans = Circle((what[0] + what[i])/2, what[0].dist(what[i])/2);
+		for(int j = 0; j <= i; j++){
+			if(ans.c.dist(what[j]) < ans.r + eps)continue;
+			ans = Circle((what[j] + what[i])/2, what[i].dist(what[j])/2);
+			for(int k = 0; k <= j; k++){
+				if(ans.c.dist(what[k]) < ans.r + eps)continue;
+				pt cen = trCirc(what[i], what[j], what[k]);
+				ans = Circle(cen, cen.dist(what[i]));
+			}
+		}
+	}
+	return ans;
+}
