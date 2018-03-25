@@ -24,7 +24,7 @@ struct pt{
 	pt& operator += (const pt & a){x += a.x; y += a.y; return *this;}
 	pt& operator -= (const pt & a){x -= a.x; y -= a.y; return *this;}
 	pt& operator *= (dbl a){x *= a; y *= a; return *this;}
-	pt& operator /= (dbl a){assert(fabs(a) > eps); return *this;}
+	pt& operator /= (dbl a){assert(fabs(a) > eps); x /= a; y /= a; return *this;}
 	bool isZero()const{return fabs(x) < eps && fabs(y) < eps;}
 	bool operator == (const pt & a)const{return (*this - a).isZero();}
 	bool operator != (const pt & a)const{return !(*this == a);}
@@ -138,6 +138,7 @@ struct Line{
 		p[1] = pt(p[0].x - b, p[0].y + a);
 	}
 	pt& operator [](const int & i){return p[i];}
+	const pt& operator[](const int & i)const{return p[i];}
 	Line(const Line & l){
 		p[0] = l.p[0]; p[1] = l.p[1];
 		a = l.a; b = l.b; c = l.c;	
@@ -344,6 +345,8 @@ struct Polygon{
 	int prv(int i)const{return (i == 0) ? ((int)p.size()-1) : (i-1);}
 	int size()const{return (int)p.size();}
 	pt& operator[](const int & i){return p[i];}
+	const pt& operator[](const int & i)const{return p[i];}
+	void clear(){p.clear();}
 	dbl area(){
 		dbl res = 0;
 		for(int i = 0; i < (int)p.size(); i++)res += p[i].cross(p[nxt(i)]);
@@ -374,63 +377,45 @@ struct Polygon{
 	}
 };
 
-void cutConvex(Line l, Polygon p, Polygon & ansl, Polygon & ansr){
-	bool add_to_l = true;
-	auto add_point = [&](Polygon & where, pt & what){if(where.p.empty() || where.p.back() != what)where.p.push_back(what);};
-	bool wl = false, wr = false;
-	for(pt cu : p.p){
-		int tmp = l.signPoint(cu);
-		if(tmp == -1)wl = true;
-		if(tmp == 1)wr = true;
-	}
-	ansl.p.clear(); ansr.p.clear();
-	if(!wl || !wr){ansl = Polygon(vector<pt>()); ansr = p; return;}
-	for(int i = 0; i < p.size(); i++){
+vector<pt> cutConvex(Polygon p, Line ln, Polygon & l, Polygon & r){
+	int n = p.size();
+	l.clear(); r.clear();
+	bool side = false;
+	vector<pt> cutp;
+	for(int i = 0; i < n; i++){
 		int j = p.nxt(i);
-		Line curr(p[i], p[j]);
-		auto kek = interLineSeg(l, curr);
-		if(kek.size() == 2){ansl = Polygon(vector<pt>()); ansr = p; return;}
-		if(kek.size() == 0){
-			if(add_to_l){
-				add_point(ansl, p[i]);
-				add_point(ansl, p[j]);
-			}
-			else{
-				add_point(ansr, p[i]);
-				add_point(ansr, p[j]);
-			}
+		auto cand = interLineSeg(ln, {p[i], p[j]});
+		if(cand.empty()){
+			if(!side){l.push_back(p[j]);}
+			else {r.push_back(p[j]);}
+			continue;
 		}
-		if(kek.size() == 1){
-			if(kek[0] == p[i]){
-				if(add_to_l){
-					add_point(ansl, p[i]);
-					add_point(ansl, p[j]);
-				}
-				else{
-					add_point(ansr, p[i]);
-					add_point(ansr, p[j]);
-				}
-				continue;
-			}
-			pt inter = kek[0];
-			if(add_to_l){
-				add_point(ansl, p[i]);
-				add_point(ansl, inter);
-				add_point(ansr, inter);
-				add_point(ansr, p[j]);
-				add_to_l = false;
-			}
-			else{
-				add_point(ansr, p[i]);
-				add_point(ansr, inter);
-				add_point(ansl, inter);
-				add_point(ansl, p[j]);
-				add_to_l = true;
-			}
+		if(cand.size() == 2){
+			l = Polygon();
+			r = p;
+			return cand;
 		}
+		pt curr = cand[0];
+		if(curr == p[i]){
+			if(!side){l.push_back(p[i]); l.push_back(p[j]); }else {r.push_back(p[i]); r.push_back(p[j]);}
+			continue;
+		}
+		if(curr == p[j]){
+			cutp.push_back(p[j]);
+			if(!side)l.push_back(p[j]); else r.push_back(p[j]);
+			side = !side;
+			continue;
+		}
+		cutp.push_back(curr);
+		if(!side){l.push_back(curr); r.push_back(curr); r.push_back(p[j]);}
+		else {r.push_back(curr); l.push_back(curr); l.push_back(p[j]);}
+		side = !side;
 	}
-	if(ansr.size() > 1 && ansr.p.front() == ansr.p.back())ansr.p.pop_back();
-	if(ansl.size() > 1 && ansl.p.front() == ansl.p.back())ansl.p.pop_back();
+	if(cutp.size() == 1){
+		l = Polygon();
+		r = p;
+	}
+	return cutp;
 }
 
 Circle minCircle(vector<pt> what){

@@ -38,7 +38,7 @@ poly convex_hull(poly p){
 	reverse(p.begin() + ptr + 1, p.end());
 	vector<int> stk(n);
 	stk[0] = 0;
-	int ptr = 1;
+	ptr = 1;
 	for(int i = 1; i < n; i++){
 		while(ptr > 1 && p[stk[ptr - 2]].cross(p[i], p[stk[ptr-1]]) > 0)ptr--;
 		stk[ptr++] = i;
