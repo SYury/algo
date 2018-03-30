@@ -15,6 +15,7 @@ namespace FastIO{
 		static inline bool isUpper(char c){return (unsigned char)(c - 'A') < 26;}
  		static inline bool isLower(char c){return (unsigned char)(c - 'a') < 26;}
 		static inline bool isAlpha(char c){return isUpper(c) || isLower(c);}
+		static inline bool isNotEndl(char c){return c != '\n';}
 		InputReader(){}
 		InputReader(FILE * _file):file(_file){}
 		inline bool readChar(char & dest){
@@ -135,6 +136,7 @@ namespace FastIO{
 		}
 	};
 	class OutputWriter{
+		protected:
 		char buffer[BUFFER_SIZE];
 		char tmp[BUFFER_SIZE];
 		FILE * file;
