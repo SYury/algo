@@ -40,10 +40,10 @@ struct pt{
 	}
 	dbl length()const{return sqrt(sqr(x) + sqr(y));}
 	dbl sqrLength()const{return x * x + y * y;}
-	void normalizeSelf(){*this /= length();}
-	pt normalize()const{
+	void normalizeSelf(dbl len = 1.0){*this /= length(); *this *= len;}
+	pt normalize(dbl len = 1.0)const{
 		pt res(*this);
-		res.normalizeSelf();
+		res.normalizeSelf(len);
 		return res;
 	}
 	dbl dist(const pt & a)const{return (*this - a).length();}
@@ -194,6 +194,7 @@ struct Circle{
 	pt getByAngle(dbl ang)const{
 		return c + pt(r * cos(ang), r * sin(ang));
 	}
+	bool hasPointCircle(const pt & p){return c.dist(p) < r + eps;}
 };
 
 pt projPtLine(pt p, Line l){
@@ -346,6 +347,7 @@ struct Polygon{
 	int size()const{return (int)p.size();}
 	pt& operator[](const int & i){return p[i];}
 	const pt& operator[](const int & i)const{return p[i];}
+	void push_back(pt kek){p.push_back(kek);}
 	void clear(){p.clear();}
 	dbl area(){
 		dbl res = 0;
