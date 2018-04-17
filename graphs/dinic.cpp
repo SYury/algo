@@ -1,6 +1,5 @@
-const long long flow_inf = 1e18;
-
 struct Dinic{
+	const long long flow_inf = 1e18;
 	struct FlowEdge{
 		int v, u;
 		long long cap, flow = 0;
@@ -35,7 +34,7 @@ struct Dinic{
 		}
 		return level[t] != -1;
 	}
-	long long dfs(int v, long long pushed = flow_inf){
+	long long dfs(int v, long long pushed){
 		if(pushed == 0)return 0;
 		if(v == t)return pushed;
 		for(int & cid = ptr[v]; cid < (int)adj[v].size(); cid++){
@@ -59,9 +58,8 @@ struct Dinic{
 			qh = 0, qt = 1;
 			q[0] = s;
 			if(!bfs())break;
-			while(long long pushed = dfs(s)){f += pushed;}
+			while(long long pushed = dfs(s, flow_inf)){f += pushed;}
 		}
 		return f;
 	}
 };
-

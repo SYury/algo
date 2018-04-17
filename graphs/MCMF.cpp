@@ -1,15 +1,13 @@
-const long long flow_inf = 1e18;
-
-struct FlowEdge{
-	int v, u;
-	long long cost;
-	long long flow = 0;
-	long long cap;
-	FlowEdge(){}
-	FlowEdge(int sv, int su, long long scost, long long scap):v(sv),u(su),cost(scost),cap(scap){}
-};
-
 struct MCMF{
+	const long long flow_inf = 1e18;
+	struct FlowEdge{
+		int v, u;
+		long long cost;
+		long long flow = 0;
+		long long cap;
+		FlowEdge(){}
+		FlowEdge(int sv, int su, long long scost, long long scap):v(sv),u(su),cost(scost),cap(scap){}
+	};
 	int n;
 	vector<vector<FlowEdge> > gr;
 	vector<long long> pot;
