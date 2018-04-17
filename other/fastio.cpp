@@ -60,9 +60,13 @@ namespace FastIO{
 		template<class T>
 		inline int readInteger(T & dest){
 			char start = skipCharacters([](char c){return isDigit(c) || c == '-';});	
+			if(__builtin_expect(start == '\0', false))
+				return 0;
 			bool neg = start == '-';
 			if(neg)
 				readChar(start);
+			if(__builtin_expect(start == '\0', false))
+				return 0;
 			ptr--;
 			int flag = readUInteger(dest);
 			if(neg)
@@ -72,9 +76,13 @@ namespace FastIO{
 		template<class T>
 		inline bool readFloat(T & dest){
 			char start = skipCharacters([](char c){return isDigit(c) || c == '-';});
+			if(__builtin_expect(start == '\0', false))
+				return 0;
 			bool neg = start == '-';
 			if(neg)
 				readChar(start);
+			if(__builtin_expect(start == '\0', false))
+				return 0;
 			ptr--;
 			unsigned long long p;
 			if(!readUInteger(p))return false;
@@ -103,6 +111,7 @@ namespace FastIO{
 		inline int readString(string & dest, F check){
 			dest.clear();
 			char c = skipCharacters(check);
+			if(__builtin_expect(c == '\0', false)){dest = ""; return 0;}
 			int l = 0;
 			while(check(c)){
 				dest += c;
@@ -119,6 +128,7 @@ namespace FastIO{
 		template<class F>
 		inline int readCString(char * dest, F check){
 			char c = skipCharacters(check);
+			if(__builtin_expect(c == '\0', false)){*dest = '\0'; return 0;}
 			int l = 0;
 			while(check(c)){
 				*dest = c;
@@ -257,4 +267,3 @@ namespace FastIO{
 		}
 	};
 }
-
