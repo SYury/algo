@@ -4,11 +4,43 @@ using namespace std;
 
 typedef long double dbl;
 
-const dbl eps = 1e-9;
-const dbl PI = 2 * acos(0);
+constexpr dbl eps = 1e-9;
+constexpr dbl PI = 2 * acos(0);
 
-dbl sqr(dbl x){
+constexpr inline dbl safe_sqrt(dbl x){
+	return x < 0 ? 0 : sqrt(x);
+}
+
+constexpr inline dbl safe_acos(dbl x){
+	return x < -1 ? acos(-1) : (x > 1 ? acos(1) : acos(x));
+}
+
+constexpr inline dbl safe_asin(dbl x){
+	return x < -1 ? asin(-1) : (x > 1 ? asin(1) : asin(x));
+}
+
+constexpr inline dbl sqr(dbl x){
 	return x * x;
+}
+
+constexpr inline bool eq(dbl x, dbl y){
+	return fabs(x - y) < eps;
+}
+
+constexpr inline bool gt(dbl x, dbl y){
+	return x > y + eps;
+}
+
+constexpr inline bool lt(dbl x, dbl y){
+	return y > x + eps;
+}
+
+constexpr inline bool ge(dbl x, dbl y){
+	return !lt(x, y);
+}
+
+constexpr inline bool le(dbl x, dbl y){
+	return !gt(x, y);
 }
 
 struct pt{
@@ -195,11 +227,18 @@ struct Circle{
 		return c + pt(r * cos(ang), r * sin(ang));
 	}
 	bool hasPointCircle(const pt & p){return c.dist(p) < r + eps;}
+	bool onPointCircle(const pt & p){return eq(c.dist(p), r);}
+	bool inPointCircle(const pt & p){return hasPointCircle(p) && !onPointCircle(p);}
 };
 
 pt projPtLine(pt p, Line l){
 	pt vec = l[1] - l[0];
 	return l[0] + vec * (vec.dot(p - l[0])/vec.dot(vec));
+}
+
+pt reflectPtLine(pt p, Line l){
+	pt q = projPtLine(p, l);
+	return p + (q - p) * 2;
 }
 
 vector<pt> interLineLine(Line l1, Line l2){
@@ -262,7 +301,7 @@ vector<pt> interLineCircle(Line l, Circle c){
 		return {projPtLine(c.c, l)};
 	}
 	pt p = projPtLine(c.c, l);
-	dbl lol = sqrt(sqr(c.r) - sqr(d));
+	dbl lol = safe_sqrt(sqr(c.r) - sqr(d));
 	lol /= (l[1] - l[0]).length();
 	return {p + (l[1] - l[0])*lol, p - (l[1] - l[0])*lol};
 }
@@ -286,7 +325,7 @@ vector<pt> interCircleCircle(Circle c1, Circle c2){
 	dbl per = c1.r + c2.r + d;
 	if(2 * longest > per + eps)return {};
 	if(abs(2 * longest - per) < 2 * eps)return {c1.getByAngle(ang)};
-	dbl cang = acos((sqr(c1.r) + sqr(d) - sqr(c2.r))/(2*c1.r*d));
+	dbl cang = safe_acos((sqr(c1.r) + sqr(d) - sqr(c2.r))/(2*c1.r*d));
 	return {c1.getByAngle(ang + cang), c1.getByAngle(ang - cang)};
 }
 
@@ -294,7 +333,7 @@ vector<pt> tangentsPtCircle(pt p, Circle c){
 	dbl d = (c.c - p).length();
 	if(d < c.r - eps)return {};
 	if(fabs(d - c.r) < eps)return {p};
-	dbl ang = acos(c.r/d);
+	dbl ang = safe_acos(c.r/d);
 	dbl cang = (p - c.c).angle();
 	return {c.getByAngle(cang - ang), c.getByAngle(cang + ang)};
 }
@@ -313,7 +352,7 @@ vector<Line> outerTangents(Circle c1, Circle c2){
 	if(c1.r + d < c2.r + eps){
 		return {{p, p + (c1.c - c2.c).rotate(PI/2)}};
 	}
-	dbl ang = asin((c2.r - c1.r)/d);
+	dbl ang = safe_asin((c2.r - c1.r)/d);
 	return {{p, p + (c1.c - p).rotate(ang)}, {p, p + (c1.c - p).rotate(-ang)}};
 }
 
@@ -326,7 +365,7 @@ vector<Line> innerTangents(Circle c1, Circle c2){
 	if(d < c1.r + c2.r + eps){
 		return {{p, p + (c1.c - p).rotate(PI/2)}};
 	}
-	dbl ang = acos(c1.r/(p - c1.c).length());
+	dbl ang = safe_acos(c1.r/(p - c1.c).length());
 	dbl cang = (p - c1.c).angle();
 	pt l = c1.getByAngle(cang + ang), r = c1.getByAngle(cang - ang);
 	return {{p, l}, {p, r}};
@@ -357,25 +396,4 @@ struct Polygon{
 	void orientCCW(){
 		if(area() < 0)reverse(p.begin(), p.end());
 	}
-	bool insidePt(pt a){
-		for(int i = 0; i < (int)p.size(); i++){
-			if(Line(p[i], p[nxt(i)]).hasPointSeg(a))return true;
-		}
-		int wn = 0;
-		for(int i = 0; i < (int)p.size(); i++){
-			int j = nxt(i);
-			if(p[i].y < a.y + eps){
-				if(a.y + eps < p[j].y){
-					if(p[i].cross(p[j], a) > eps)++wn;
-				}
-			}
-			else{
-				if(p[j].y < a.y + eps){
-					if(p[i].cross(p[j], a) < -eps)--wn;
-				}
-			}
-		}
-		return wn != 0;
-	}
 };
-
