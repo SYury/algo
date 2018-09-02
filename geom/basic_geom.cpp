@@ -204,6 +204,11 @@ struct Line{
 	dbl distToPt(const pt & t)const{
 		return fabs(a * t.x + b * t.y + c)/getOrth().length();
 	}
+	dbl distToPtSeg(const pt & t)const{
+		if(le(p[0].dot(t, p[1]), 0))return p[0].dist(t);
+		if(le(p[1].dot(t, p[0]), 0))return p[1].dist(t);
+		return distToPt(t);
+	}
 };
 
 struct Circle{
