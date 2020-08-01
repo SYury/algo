@@ -282,10 +282,12 @@ struct MultiplicativeSum{
         State result(state_elements.size(), 0);
         prime_powers = vector<ll>(primes.size(), 1);
         for(size_t coeff = 0; coeff < polynomial.size(); coeff++){
-            State curr = power_calc(coeff, PowerSum<mod>(coeff));
-            for(size_t i = 0; i < state_elements.size(); i++){
-                iadd<mod>(result[i], mul<mod>(curr[i], polynomial[coeff]));
-                isub<mod>(result[i], polynomial[coeff]);
+            if(polynomial[coeff]){
+                State curr = power_calc(coeff, PowerSum<mod>(coeff));
+                for(size_t i = 0; i < state_elements.size(); i++){
+                    iadd<mod>(result[i], mul<mod>(curr[i], polynomial[coeff]));
+                    isub<mod>(result[i], polynomial[coeff]);
+                }
             }
             for(size_t i = 1; i < primes.size(); i++)
                 imul<mod>(prime_powers[i], primes[i]);
