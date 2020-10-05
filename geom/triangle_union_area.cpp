@@ -1,5 +1,6 @@
 //ADD BASIC GEOM HERE
 
+ 
 inline char get_segtype(Line segment, pt other_point){
     if(eq(segment[0].x, segment[1].x))
         return 0;
@@ -7,8 +8,8 @@ inline char get_segtype(Line segment, pt other_point){
         swap(segment[0], segment[1]);
     return (segment[1] - segment[0]).cross(other_point - segment[0]) > 0 ? 1 : -1;
 }
-
-dbl union_area(vector<tuple<pt, pt, pt> > triangles){
+ 
+dbl union_perimeter(vector<tuple<pt, pt, pt> > triangles){
     vector<Line> segments(3 * triangles.size());
     vector<char> segtype(segments.size());
     for(size_t i = 0; i < triangles.size(); i++){
