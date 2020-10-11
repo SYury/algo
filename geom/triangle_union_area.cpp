@@ -9,7 +9,7 @@ inline char get_segtype(Line segment, pt other_point){
     return (segment[1] - segment[0]).cross(other_point - segment[0]) > 0 ? 1 : -1;
 }
  
-dbl union_perimeter(vector<tuple<pt, pt, pt> > triangles){
+dbl union_area(vector<tuple<pt, pt, pt> > triangles){
     vector<Line> segments(3 * triangles.size());
     vector<char> segtype(segments.size());
     for(size_t i = 0; i < triangles.size(); i++){
